@@ -1,11 +1,19 @@
+import { Metadata } from 'next'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { SignalForm } from '@/components/signaler/signal-form'
 import Image from 'next/image'
 
-export const metadata = {
-  title: 'Signaler une zone sale - EcoParakou',
-  description: 'Contribuez à la propreté de Parakou en signalant les zones sales. Votre signalement permet à nos équipes d\'intervenir rapidement.',
+export const metadata: Metadata = {
+  title: 'Signaler une Zone Sale | EcoParakou',
+  description: 'Reportez les zones sales à Parakou avec photo et localisation. Votre signalement aide nos équipes à nettoyer efficacement votre quartier.',
+  keywords: ['signalement', 'pollution', 'Parakou', 'nettoyer', 'environnement'],
+  openGraph: {
+    title: 'Signaler une Zone Sale',
+    description: 'Participez à l\'amélioration de votre environnement',
+    type: 'website',
+    url: 'https://ecoparakou.com/signaler',
+  },
 }
 
 export default function SignalerPage() {

@@ -1,6 +1,19 @@
+import { Metadata } from 'next'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
+
+export const metadata: Metadata = {
+  title: 'À Propos | EcoParakou - Notre Mission Environnementale',
+  description: 'Découvrez EcoParakou, le mouvement citoyen transformant Parakou en ville propre et durable. Notre mission, nos valeurs et notre impact.',
+  keywords: ['EcoParakou', 'environnement', 'Parakou', 'mission sociale', 'développement durable'],
+  openGraph: {
+    title: 'À Propos de EcoParakou',
+    description: 'Ensemble pour une ville propre et durable',
+    type: 'website',
+    url: 'https://ecoparakou.com/about',
+  },
+}
 
 export default function AboutPage() {
   return (

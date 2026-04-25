@@ -230,7 +230,7 @@ export function MissionsList() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5 mb-6">
-                  {mission.tags.map((tag) => (
+                  {mission.tags.map((tag: any) => (
                     <span
                       key={tag.label}
                       className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-lg text-xs font-medium text-on-surface-variant"
