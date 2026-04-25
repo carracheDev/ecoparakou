@@ -158,7 +158,7 @@ export function MissionsList() {
               <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
                 activeFilter === filter ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
               }`}>
-                {allMissions.filter(m => m.status === filter).length}
+                {missions.filter(m => filter === "Tous" || mapStatutToStatus(m.statut) === mapStatutToStatus(filter)).length}
               </span>
             )}
           </button>
@@ -166,20 +166,25 @@ export function MissionsList() {
 
         {/* Résultats count */}
         <span className="ml-auto text-sm text-gray-400 self-center">
-          {filtered.length} mission{filtered.length > 1 ? 's' : ''}
+          {loading ? "Chargement..." : `${filtered.length} mission${filtered.length > 1 ? 's' : ''}`}
         </span>
       </div>
 
-      {/* Grid */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <span className="material-symbols-outlined text-5xl text-gray-300 mb-4 block">search_off</span>
-          <p className="text-gray-500 font-medium">Aucune mission trouvée</p>
-          <p className="text-gray-400 text-sm mt-1">Essaie un autre mot-clé ou filtre</p>
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 bg-surface-container-low rounded-2xl">
+          <span className="material-symbols-outlined text-6xl text-on-surface-variant opacity-30 mb-4 block">search_off</span>
+          <p className="text-on-surface font-semibold text-lg mb-1">Aucune mission trouvée</p>
+          <p className="text-on-surface-variant text-sm mb-6">Essayez avec d'autres critères de recherche</p>
           <button
             onClick={() => { setSearchQuery(''); setActiveFilter('Tous') }}
-            className="mt-4 text-green-700 text-sm font-semibold hover:underline"
+            className="text-primary text-sm font-semibold hover:underline inline-flex items-center gap-1"
           >
+            <span className="material-symbols-outlined text-base">refresh</span>
             Réinitialiser les filtres
           </button>
         </div>
@@ -188,7 +193,7 @@ export function MissionsList() {
           {filtered.map((mission) => (
             <div
               key={mission.id}
-              className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col group hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
               {/* Image */}
               <div className="relative h-48 overflow-hidden">
@@ -203,26 +208,9 @@ export function MissionsList() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
                 {/* Status badge */}
-                <div className="absolute top-3 left-3">
-                  <span className={`flex items-center gap-1.5 ${mission.statusColor} text-xs font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${mission.statusDot} animate-pulse`} />
-                    {mission.status}
-                  </span>
-                </div>
-
-                {/* Distance badge */}
                 <div className="absolute top-3 right-3">
-                  <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                    <span className="material-symbols-outlined text-xs">near_me</span>
-                    {mission.distance}
-                  </span>
-                </div>
-
-                {/* Volunteers bottom */}
-                <div className="absolute bottom-3 right-3">
-                  <span className="flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-                    <span className="material-symbols-outlined text-xs">group</span>
-                    {mission.volunteers} bénévole{mission.volunteers > 1 ? 's' : ''}
+                  <span className={`${mission.statusColor} text-xs font-medium px-3 py-1 rounded-full border`}>
+                    {mission.status}
                   </span>
                 </div>
               </div>
@@ -230,36 +218,35 @@ export function MissionsList() {
               {/* Content */}
               <div className="p-4 flex flex-col flex-grow">
                 <div className="flex items-start justify-between mb-1">
-                  <h3 className="text-base font-bold text-gray-900 leading-tight">{mission.title}</h3>
-                  <span className={`material-symbols-outlined text-xl ${mission.iconColor} flex-shrink-0 ml-2`}>
+                  <h3 className="text-lg font-semibold text-on-surface">{mission.title}</h3>
+                  <span className={`material-symbols-outlined ${mission.iconColor}`}>
                     {mission.icon}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1 text-gray-500 mb-3">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-xs">{mission.location}</span>
+                <div className="flex items-center gap-1 text-on-surface-variant mb-4">
+                  <span className="material-symbols-outlined text-base">location_on</span>
+                  <span className="text-sm">{mission.location}</span>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-6">
                   {mission.tags.map((tag) => (
                     <span
                       key={tag.label}
-                      className="flex items-center gap-1 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-lg text-xs font-medium text-gray-600"
+                      className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-lg text-xs font-medium text-on-surface-variant"
                     >
-                      <span className="material-symbols-outlined text-xs">{tag.icon}</span>
                       {tag.label}
                     </span>
                   ))}
                 </div>
 
-                <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{mission.updatedAt}</span>
+                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-xs font-medium text-on-surface-variant">{mission.updatedAt}</span>
                   <Link
                     href={`/missions/${mission.id}`}
-                    className="bg-green-900 hover:bg-green-700 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-all active:scale-95"
+                    className="bg-secondary-container text-on-secondary-container font-semibold text-sm px-4 py-1.5 rounded-lg hover:brightness-95 transition-all active:scale-95"
                   >
-                    Voir détail →
+                    Voir détail
                   </Link>
                 </div>
               </div>
