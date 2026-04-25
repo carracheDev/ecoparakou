@@ -1,23 +1,82 @@
+"use client"
+
+import { useEffect, useRef } from 'react'
+
 const partners = [
-  "Mairie de Parakou",
-  "NGO GreenAfrica",
-  "Bank of Benin",
-  "Soneb",
-  "LogisTrans",
+  { name: "Mairie de Parakou", emoji: "🏛️" },
+  { name: "NGO GreenAfrica", emoji: "🌍" },
+  { name: "Bank of Benin", emoji: "🏦" },
+  { name: "Soneb", emoji: "💧" },
+  { name: "LogisTrans", emoji: "🚛" },
+  { name: "Mairie de Parakou", emoji: "🏛️" },
+  { name: "NGO GreenAfrica", emoji: "🌍" },
+  { name: "Bank of Benin", emoji: "🏦" },
+  { name: "Soneb", emoji: "💧" },
+  { name: "LogisTrans", emoji: "🚛" },
 ]
 
 export function PartnersSection() {
+  const trackRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+
+    let animationId: number
+    let position = 0
+    const speed = 0.5
+
+    const animate = () => {
+      position -= speed
+      const halfWidth = track.scrollWidth / 2
+      if (Math.abs(position) >= halfWidth) {
+        position = 0
+      }
+      track.style.transform = `translateX(${position}px)`
+      animationId = requestAnimationFrame(animate)
+    }
+
+    animationId = requestAnimationFrame(animate)
+
+    const handleMouseEnter = () => cancelAnimationFrame(animationId)
+    const handleMouseLeave = () => { animationId = requestAnimationFrame(animate) }
+
+    track.addEventListener('mouseenter', handleMouseEnter)
+    track.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      cancelAnimationFrame(animationId)
+      track.removeEventListener('mouseenter', handleMouseEnter)
+      track.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [])
+
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6 text-center">
-        <h2 className="text-3xl font-semibold text-primary mb-10">Partenaires et sponsors</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 items-center justify-items-center opacity-60">
-          {partners.map((partner) => (
-            <div 
-              key={partner}
-              className="h-11 flex items-center justify-center font-semibold text-gray-400 border-2 border-dashed border-gray-200 rounded-lg px-5 w-full text-sm"
+    <section className="py-20 bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 text-center mb-12">
+        <span className="inline-block bg-[#e8f5e9] text-[#00450d] text-[10px] font-bold tracking-widest uppercase px-4 py-1.5 rounded-full mb-3">
+          Ils nous font confiance
+        </span>
+        <h2 className="text-3xl font-semibold text-primary">Partenaires et sponsors</h2>
+      </div>
+
+      {/* Carousel */}
+      <div className="relative w-full overflow-hidden">
+        {/* Gradient gauche */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-r from-white to-transparent pointer-events-none" />
+        {/* Gradient droite */}
+        <div className="absolute right-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+
+        <div ref={trackRef} className="flex gap-5 w-max">
+          {partners.map((partner, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-green-200 transition-all duration-300 rounded-2xl px-6 py-4 min-w-[200px] cursor-default group"
             >
-              {partner}
+              <span className="text-2xl">{partner.emoji}</span>
+              <span className="font-semibold text-gray-600 group-hover:text-green-700 transition-colors text-sm whitespace-nowrap">
+                {partner.name}
+              </span>
             </div>
           ))}
         </div>

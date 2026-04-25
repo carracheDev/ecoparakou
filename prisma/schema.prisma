@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SIGNALEUR
+  COLLECTEUR
+}
+
+enum Gravite {
+  LEGER
+  MODERE
+  CRITIQUE
+}
+
+enum StatutSignalement {
+  EN_ATTENTE
+  EN_COURS
+  RESOLU
+}
+
+enum StatutMission {
+  DISPONIBLE
+  EN_COURS
+  TERMINEE
+}
+
+model User {
+  id          String   @id @default(cuid())
+  nom         String
+  email       String   @unique
+  password    String
+  role        Role
+  telephone   String?
+  points      Int      @default(0)
+  momoNumber  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  signalements Signalement[]
+  missions     Mission[]
+}
+
+model Signalement {
+  id          String            @id @default(cuid())
+  titre       String
+  description String?
+  latitude    Float
+  longitude   Float
+  adresse     String?
+  photoUrl    String?
+  gravite     Gravite           @default(LEGER)
+  statut      StatutSignalement @default(EN_ATTENTE)
+  analyseIA   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  userId  String
+  user    User    @relation(fields: [userId], references: [id])
+  mission Mission?
+}
+
+model Mission {
+  id          String        @id @default(cuid())
+  titre       String
+  description String?
+  points      Int           @default(50)
+  statut      StatutMission @default(DISPONIBLE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  signalementId String      @unique
+  signalement   Signalement @relation(fields: [signalementId], references: [id])
+  collecteurId  String?
+  collecteur    User?       @relation(fields: [collecteurId], references: [id])
+}

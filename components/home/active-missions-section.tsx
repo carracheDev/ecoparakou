@@ -12,7 +12,7 @@ const missions = [
     iconColor: "text-red-700",
     tags: ["Plastique", "Urgent"],
     updatedAt: "Il y a 2h",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAewwhMTnGbk5WfjarJ1odXkW5SmtXYkZQfgNoIJTO4jRLW8DCDSWzO-CQRBgirAuDaCqC3T5TDe6ZszyCwToDBEXIsOisD0n15lKpgnHCCAFjpPPyLGD9C5Shc_OU0V-zi5dOHP_Y8-Wed_2T9S816TwpsvH9KC4_H-kgOqvfNrDZ3o7k9ayfYVzmI4wzyAITzCfbGOxi84ImG5YiWegEmAfWX6LqlnWAGiV1nU2iFsFi7KkP94yZSTN0zaNWycp3gK79X3aYcSas",
+    image: "/images/mission-1.jpg",
   },
   {
     id: 2,
@@ -24,7 +24,7 @@ const missions = [
     iconColor: "text-secondary",
     tags: ["Organique"],
     updatedAt: "Il y a 5h",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlBYkkXtYZcf53QgpmuDJESJo3GcMbkMvyMsucHAGsDcfKQH1Yf8zw8LUSYpxfHezrm38NQirNz-g-ElqQamJuxMNkVAfQ6iB5of-HYPfUPvWu3Xou1JT_HV6V_6WWVrnEtWrk3a5LYpMO0aK-7cMfGa_iucHx3oN8s7NcRiD5IjyP8ksj6hY87NjfkFmGCsN-nWk2B8cP5N2YsvoyuVRNAEZpSIUmxBoZCiRSzgTv-dwgIChfyzDelzq-jra5g5jP9b6jd1PF6TY",
+    image: "/images/mission--marché.jpg",
   },
   {
     id: 3,
@@ -36,7 +36,7 @@ const missions = [
     iconColor: "text-primary",
     tags: ["Mixte"],
     updatedAt: "Terminé hier",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCnqwWJFx1fPG-yaXR_nCyDejpwIttw6CzhjGN30c9Wc7-rvPzmHAehf_CHplUUaf0HxwzVd9CsABZ8BaipK4944sqday8_Y6S5upNLVv60qvrXuMuWPzAuU_I-Jqq90_oXB6LVYWCS9d_pa5LbmB2eGlftgJk2ug-JwjerausHBj7fGA-LPnn06urQqMcVqBN9MUlYgOFyeGyhSXeXD97VIlnFUd-IRXWXafPBWX8QeC2RXwlKyy2_fJ7dnZ0ex20upOvHqjinU7o",
+    image: "/images/mission-2.jpg",
   },
 ]
 
@@ -51,7 +51,7 @@ export function ActiveMissionsSection() {
             </span>
             <h2 className="text-3xl font-semibold text-primary">Missions actives</h2>
           </div>
-          <Link 
+          <Link
             href="/missions"
             className="border border-primary text-primary px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary hover:text-white transition-colors"
           >
@@ -60,15 +60,16 @@ export function ActiveMissionsSection() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {missions.map((mission) => (
-            <div 
+            <div
               key={mission.id}
               className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300"
             >
               <div className="relative h-48 overflow-hidden">
-                <Image 
+                <Image
                   src={mission.image}
                   alt={mission.title}
                   fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 right-3">
@@ -88,7 +89,7 @@ export function ActiveMissionsSection() {
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-6">
                   {mission.tags.map((tag) => (
-                    <span 
+                    <span
                       key={tag}
                       className="flex items-center gap-1 bg-surface-container px-2.5 py-1 rounded-lg text-xs font-medium"
                     >
@@ -98,7 +99,7 @@ export function ActiveMissionsSection() {
                 </div>
                 <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-xs font-medium text-outline">{mission.updatedAt}</span>
-                  <Link 
+                  <Link
                     href={`/missions/${mission.id}`}
                     className="bg-secondary-container text-on-secondary-container font-semibold text-sm px-4 py-1.5 rounded-lg hover:brightness-95 transition-all active:scale-95"
                   >
