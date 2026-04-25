@@ -8,18 +8,40 @@ import Image from 'next/image'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
+interface User {
+  name: string
+  email: string
+  role: string
+  points: number
+}
+
 export function Navbar() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    // Récupérer user depuis localStorage au chargement
+    const savedUser = localStorage.getItem('user')
+    const token = localStorage.getItem('token')
+    if (savedUser && token) {
+      const u = JSON.parse(savedUser)
+      setCurrentUser({
+        name: u.nom || u.name,
+        email: u.email,
+        role: u.role,
+        points: u.points || 0,
+      })
+      setIsLoggedIn(true)
+    }
+  }, [])
 
   const navLinks = [
     { href: '/', label: 'Accueil' },
@@ -32,13 +54,15 @@ export function Navbar() {
     setShowAuthModal(true)
   }
 
-  const handleLogin = (user: { name: string; email: string }) => {
+  const handleLogin = (user: User) => {
     setCurrentUser(user)
     setIsLoggedIn(true)
     setShowAuthModal(false)
   }
 
   const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
     setIsLoggedIn(false)
     setCurrentUser(null)
     setShowDropdown(false)
@@ -48,30 +72,40 @@ export function Navbar() {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
   }
 
+  const getRoleLabel = (role: string) => {
+    return role === 'COLLECTEUR' ? '🚛 Collecteur' : '📢 Signaleur'
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    return role === 'COLLECTEUR'
+      ? 'bg-blue-100 text-blue-700'
+      : 'bg-green-100 text-green-700'
+  }
+
   return (
     <>
       <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 shadow-sm">
         <div className="flex justify-between items-center w-full px-4 md:px-6 py-3 max-w-7xl mx-auto">
 
           {/* LOGO */}
-         <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
-  <Image
-    src="/images/logo.png"
-    alt="EcoParakou"
-    width={56}
-    height={56}
-    className="w-14 h-14 object-contain group-hover:opacity-85 transition-opacity"
-  />
-  <div className="flex flex-col">
-    <span className="text-lg md:text-xl font-bold tracking-tight leading-tight">
-      <span className="text-green-700">Eco</span>
-      <span className="text-amber-500">Parakou</span>
-    </span>
-    <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 font-medium leading-tight">
-      Ville propre, Bénin responsable
-    </span>
-  </div>
-</Link>
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
+            <Image
+              src="/images/logo.png"
+              alt="EcoParakou"
+              width={56}
+              height={56}
+              className="w-14 h-14 object-contain group-hover:opacity-85 transition-opacity"
+            />
+            <div className="flex flex-col">
+              <span className="text-lg md:text-xl font-bold tracking-tight leading-tight">
+                <span className="text-green-700">Eco</span>
+                <span className="text-amber-500">Parakou</span>
+              </span>
+              <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 font-medium leading-tight">
+                Ville propre, Bénin responsable
+              </span>
+            </div>
+          </Link>
 
           {/* NAVIGATION LINKS - Desktop */}
           <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
@@ -124,18 +158,44 @@ export function Navbar() {
               </div>
             ) : (
               <div className="relative">
+                {/* Avatar + Points */}
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white flex items-center justify-center font-bold text-sm cursor-pointer hover:shadow-md transition-shadow ring-2 ring-green-200"
+                  className="flex items-center gap-2 cursor-pointer"
                 >
-                  {currentUser ? getInitials(currentUser.name) : 'U'}
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 text-white flex items-center justify-center font-bold text-sm hover:shadow-md transition-shadow ring-2 ring-green-200">
+                    {currentUser ? getInitials(currentUser.name) : 'U'}
+                  </div>
+                  <div className="hidden md:flex flex-col items-start">
+                    <span className="text-xs font-bold text-gray-800 dark:text-white leading-tight">
+                      {currentUser?.name.split(' ')[0]}
+                    </span>
+                    <span className="text-xs text-amber-600 font-semibold leading-tight">
+                      ⭐ {currentUser?.points} pts
+                    </span>
+                  </div>
                 </button>
 
+                {/* Dropdown */}
                 {showDropdown && (
-                  <div className="absolute top-full right-0 mt-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl min-w-[200px] shadow-lg z-50 overflow-hidden">
+                  <div className="absolute top-full right-0 mt-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl min-w-[220px] shadow-lg z-50 overflow-hidden">
+                    
+                    {/* Header user */}
                     <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">{currentUser?.name}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser?.email}</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        {currentUser?.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {currentUser?.email}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getRoleBadgeColor(currentUser?.role || '')}`}>
+                          {getRoleLabel(currentUser?.role || '')}
+                        </span>
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                          ⭐ {currentUser?.points} points
+                        </span>
+                      </div>
                     </div>
 
                     <Link
@@ -148,14 +208,13 @@ export function Navbar() {
                     </Link>
 
                     <Link
-                      href="#"
+                      href="/signaler"
                       onClick={() => setShowDropdown(false)}
                       className="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <span className="text-base">⭐</span>
-                      Mon impact
+                      <span className="text-base">📸</span>
+                      Faire un signalement
                     </Link>
-
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-100 dark:border-gray-700"
@@ -175,7 +234,8 @@ export function Navbar() {
               aria-label="Menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
               </svg>
             </button>
           </div>
@@ -200,7 +260,6 @@ export function Navbar() {
                 </Link>
               ))}
 
-              {/* THEME TOGGLE MOBILE */}
               {mounted && (
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -211,6 +270,29 @@ export function Navbar() {
                     : <><Moon className="w-4 h-4" /> Mode sombre</>
                   }
                 </button>
+              )}
+
+              {/* User info mobile */}
+              {isLoggedIn && currentUser && (
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <p className="text-sm font-bold text-green-800 dark:text-green-300">
+                    {currentUser.name}
+                  </p>
+                  <div className="flex gap-2 mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${getRoleBadgeColor(currentUser.role)}`}>
+                      {getRoleLabel(currentUser.role)}
+                    </span>
+                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                      ⭐ {currentUser.points} pts
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="mt-2 text-xs text-red-600 font-semibold hover:underline"
+                  >
+                    🚪 Déconnexion
+                  </button>
+                </div>
               )}
 
               {!isLoggedIn && (

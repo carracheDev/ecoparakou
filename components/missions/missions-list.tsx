@@ -1,104 +1,11 @@
 // components/missions/missions-list.tsx
 "use client"
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-const allMissions = [
-  {
-    id: 1,
-    title: "Quartier Ladji-Farani",
-    location: "Zone Nord-Est, Parakou",
-    status: "En attente",
-    statusColor: "bg-red-100 text-red-700 border-red-200",
-    statusDot: "bg-red-500",
-    icon: "priority_high",
-    iconColor: "text-red-600",
-    tags: [{ icon: "recycling", label: "Plastique" }, { icon: "warning", label: "Urgent" }],
-    updatedAt: "Mis à jour il y a 2h",
-    image: "/images/mission-1.jpg",
-    volunteers: 4,
-    distance: "2.3 km",
-  },
-  {
-    id: 2,
-    title: "Quartier Banikanni",
-    location: "Zone Marché, Parakou",
-    status: "En cours",
-    statusColor: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    statusDot: "bg-yellow-400",
-    icon: "pending",
-    iconColor: "text-yellow-600",
-    tags: [{ icon: "compost", label: "Organique" }],
-    updatedAt: "Mis à jour il y a 5h",
-    image: "/images/mission--marché.jpg",
-    volunteers: 12,
-    distance: "1.1 km",
-  },
-  {
-    id: 3,
-    title: "Quartier Albarika",
-    location: "Zone Universitaire, Parakou",
-    status: "Terminé",
-    statusColor: "bg-green-100 text-green-700 border-green-200",
-    statusDot: "bg-green-500",
-    icon: "check_circle",
-    iconColor: "text-green-600",
-    tags: [{ icon: "delete", label: "Mixte" }],
-    updatedAt: "Terminé hier",
-    image: "/images/mission-2.jpg",
-    volunteers: 8,
-    distance: "3.5 km",
-  },
-  {
-    id: 4,
-    title: "Zone Industrielle",
-    location: "Avenue du Port, Parakou",
-    status: "En attente",
-    statusColor: "bg-red-100 text-red-700 border-red-200",
-    statusDot: "bg-red-500",
-    icon: "priority_high",
-    iconColor: "text-red-600",
-    tags: [{ icon: "biotech", label: "Dangereux" }],
-    updatedAt: "Nouveau signalement",
-    image: "/images/mission-4.jpg",
-    volunteers: 0,
-    distance: "5.8 km",
-  },
-  {
-    id: 5,
-    title: "Parc de l'Indépendance",
-    location: "Centre-Ville, Parakou",
-    status: "En cours",
-    statusColor: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    statusDot: "bg-yellow-400",
-    icon: "pending",
-    iconColor: "text-yellow-600",
-    tags: [{ icon: "park", label: "Espaces Verts" }],
-    updatedAt: "Mis à jour il y a 1h",
-    image: "/images/mission-5.jpg",
-    volunteers: 6,
-    distance: "0.8 km",
-  },
-  {
-    id: 6,
-    title: "Marché Central",
-    location: "Place du marché, Parakou",
-    status: "En attente",
-    statusColor: "bg-red-100 text-red-700 border-red-200",
-    statusDot: "bg-red-500",
-    icon: "priority_high",
-    iconColor: "text-red-600",
-    tags: [{ icon: "compost", label: "Organique" }, { icon: "warning", label: "Urgent" }],
-    updatedAt: "Mis à jour il y a 3h",
-    image: "/images/mission--marché.jpg",
-    volunteers: 2,
-    distance: "1.4 km",
-  },
-]
-
-const STATUS_FILTERS = ["Tous", "En attente", "En cours", "Terminé"]
+const STATUS_FILTERS = ["Tous", "DISPONIBLE", "EN_COURS", "TERMINEE"]
 
 const SORT_OPTIONS = [
   { label: "Plus récent", value: "recent" },
@@ -106,39 +13,83 @@ const SORT_OPTIONS = [
   { label: "Bénévoles", value: "volunteers" },
 ]
 
+const mapStatutToStatus = (statut: string) => {
+  const map: { [key: string]: string } = {
+    DISPONIBLE: "En attente",
+    EN_COURS: "En cours",
+    TERMINEE: "Terminé",
+  }
+  return map[statut] || statut
+}
+
+const mapGraviteToConfig = (gravite: string) => {
+  const map: { [key: string]: any } = {
+    LEGER: { color: 'bg-green-100 text-green-800', label: '🟢 Léger', icon: 'check_circle', iconColor: 'text-green-600', statusColor: 'bg-green-100 text-green-700 border-green-200', statusDot: 'bg-green-500' },
+    MODERE: { color: 'bg-orange-100 text-orange-800', label: '🟠 Modéré', icon: 'pending', iconColor: 'text-orange-600', statusColor: 'bg-yellow-100 text-yellow-700 border-yellow-200', statusDot: 'bg-yellow-400' },
+    CRITIQUE: { color: 'bg-red-100 text-red-800', label: '🔴 Critique - Urgent !', icon: 'priority_high', iconColor: 'text-red-600', statusColor: 'bg-red-100 text-red-700 border-red-200', statusDot: 'bg-red-500' },
+  }
+  return map[gravite] || map.LEGER
+}
+
 export function MissionsList() {
+  const [missions, setMissions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState("Tous")
   const [sortBy, setSortBy] = useState("recent")
   const [showSort, setShowSort] = useState(false)
 
+  useEffect(() => {
+    const fetchMissions = async () => {
+      try {
+        const res = await fetch('/api/missions')
+        const data = await res.json()
+        setMissions(data)
+      } catch (error) {
+        console.error('Erreur lors du chargement des missions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMissions()
+  }, [])
+
   const filtered = useMemo(() => {
-    let result = allMissions
+    let result = missions.map((mission: any) => ({
+      id: mission.id,
+      title: mission.titre,
+      location: mission.signalement?.adresse || "Non précisée",
+      status: mapStatutToStatus(mission.statut),
+      ...mapGraviteToConfig(mission.signalement?.gravite || 'LEGER'),
+      tags: mission.signalement?.gravite ? [{ icon: "warning", label: mapGraviteToConfig(mission.signalement.gravite).label }] : [],
+      updatedAt: mission.signalement?.createdAt ? new Date(mission.signalement.createdAt).toLocaleDateString('fr-FR') : "N/A",
+      image: mission.signalement?.photoUrl || "/images/mission-1.jpg",
+      volunteers: 0,
+      distance: "N/A",
+      statut: mission.statut,
+    }))
 
     // Filtre recherche — title + location
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(m =>
         m.title.toLowerCase().includes(q) ||
-        m.location.toLowerCase().includes(q) ||
-        m.tags.some(t => t.label.toLowerCase().includes(q))
+        m.location.toLowerCase().includes(q)
       )
     }
 
     // Filtre statut
     if (activeFilter !== "Tous") {
-      result = result.filter(m => m.status === activeFilter)
+      result = result.filter(m => mapStatutToStatus(m.statut) === mapStatutToStatus(activeFilter))
     }
 
     // Tri
-    if (sortBy === "distance") {
-      result = [...result].sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
-    } else if (sortBy === "volunteers") {
-      result = [...result].sort((a, b) => b.volunteers - a.volunteers)
+    if (sortBy === "recent") {
+      result = [...result].sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     }
 
     return result
-  }, [searchQuery, activeFilter, sortBy])
+  }, [missions, searchQuery, activeFilter, sortBy])
 
   return (
     <>

@@ -1,185 +1,295 @@
-"use client"
+'use client'
 
-import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 
-const missionsData: Record<string, {
-  title: string
-  zone: string
-  date: string
-  priority: string
-  description: string
-  type: string
-  need: string
-  image: string
-  impact: string
-}> = {
-  "1": {
-    title: "Nettoyage Ladji Farani",
-    zone: "Quartier Ladji Farani, Zone C",
-    date: "12 Oct 2023",
-    priority: "Priorité Haute",
-    description: "Dépôt sauvage de plastique et de déchets ménagers obstruant partiellement le passage près de l'école primaire. La zone nécessite une intervention urgente pour éviter l'insalubrité avant les prochaines pluies. Volume estimé : 3m³.",
-    type: "Plastique",
-    need: "Benne-tasseuse",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDiDF9DJ7UFIaGqdpkEfdSxp6mlU8Mzjrsmlf83Xd7zdLlZFHpS1Xp8MK6HVBVpvX06fFr12eR0bUbVShSI_aPhLPnNjJt188Z4A5nLTGvUP4Ebv0hkuajRKKvTH027bPB2AxwrmLbqC5TH7sPPpPeiUL5ozloULveqIpjvwokasrisMXeh3CtN4rhIHGEZNcBNv2FMczpTWuBpl5cHVvtIsQDZiYd3wziPkmueUtW9Yq66tSgsIv739YeEOxM2PeIc2G8Drtlv6VE",
-    impact: "Réduction de 250kg de CO2 équivalent en traitant ces déchets.",
-  },
-  "2": {
-    title: "Collecte Banikanni",
-    zone: "Quartier Banikanni, Zone Marché",
-    date: "15 Oct 2023",
-    priority: "En cours",
-    description: "Déchets organiques provenant du marché local. Collecte régulière nécessaire pour maintenir l'hygiène de la zone commerciale. Intervention planifiée avec les commerçants.",
-    type: "Organique",
-    need: "Camion-benne",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBlBYkkXtYZcf53QgpmuDJESJo3GcMbkMvyMsucHAGsDcfKQH1Yf8zw8LUSYpxfHezrm38NQirNz-g-ElqQamJuxMNkVAfQ6iB5of-HYPfUPvWu3Xou1JT_HV6V_6WWVrnEtWrk3a5LYpMO0aK-7cMfGa_iucHx3oN8s7NcRiD5IjyP8ksj6hY87NjfkFmGCsN-nWk2B8cP5N2YsvoyuVRNAEZpSIUmxBoZCiRSzgTv-dwgIChfyzDelzq-jra5g5jP9b6jd1PF6TY",
-    impact: "Réduction de 180kg de CO2 équivalent en traitant ces déchets.",
-  },
-  "3": {
-    title: "Assainissement Albarika",
-    zone: "Quartier Albarika, Zone Universitaire",
-    date: "10 Oct 2023",
-    priority: "Terminé",
-    description: "Mission de nettoyage complète de la zone universitaire. Collecte mixte effectuée avec succès. Zone maintenant propre et entretenue.",
-    type: "Mixte",
-    need: "Équipe manuelle",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCnqwWJFx1fPG-yaXR_nCyDejpwIttw6CzhjGN30c9Wc7-rvPzmHAehf_CHplUUaf0HxwzVd9CsABZ8BaipK4944sqday8_Y6S5upNLVv60qvrXuMuWPzAuU_I-Jqq90_oXB6LVYWCS9d_pa5LbmB2eGlftgJk2ug-JwjerausHBj7fGA-LPnn06urQqMcVqBN9MUlYgOFyeGyhSXeXD97VIlnFUd-IRXWXafPBWX8QeC2RXwlKyy2_fJ7dnZ0ex20upOvHqjinU7o",
-    impact: "Réduction de 320kg de CO2 équivalent grâce à cette intervention.",
-  },
+const graviteConfig = {
+  LEGER: { color: 'bg-green-100 text-green-800', label: '🟢 Léger', points: 50 },
+  MODERE: { color: 'bg-orange-100 text-orange-800', label: '🟠 Modéré', points: 75 },
+  CRITIQUE: { color: 'bg-red-100 text-red-800', label: '🔴 Critique - Urgent !', points: 100 },
 }
 
-// Default mission for unknown IDs
-const defaultMission = {
-  title: "Mission EcoParakou",
-  zone: "Parakou",
-  date: "2023",
-  priority: "En attente",
-  description: "Une nouvelle mission de nettoyage à Parakou. Détails en cours de confirmation.",
-  type: "Mixte",
-  need: "À déterminer",
-  image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDiDF9DJ7UFIaGqdpkEfdSxp6mlU8Mzjrsmlf83Xd7zdLlZFHpS1Xp8MK6HVBVpvX06fFr12eR0bUbVShSI_aPhLPnNjJt188Z4A5nLTGvUP4Ebv0hkuajRKKvTH027bPB2AxwrmLbqC5TH7sPPpPeiUL5ozloULveqIpjvwokasrisMXeh3CtN4rhIHGEZNcBNv2FMczpTWuBpl5cHVvtIsQDZiYd3wziPkmueUtW9Yq66tSgsIv739YeEOxM2PeIc2G8Drtlv6VE",
-  impact: "Impact environnemental positif estimé.",
+function MiniMap({ latitude, longitude, adresse }: { latitude: number; longitude: number; adresse?: string }) {
+  useEffect(() => {
+    let map: any = null
+    const init = async () => {
+      const L = (await import('leaflet')).default
+      await import('leaflet/dist/leaflet.css')
+      const container = document.getElementById('mission-map')
+      if (!container) return
+      // @ts-ignore
+      if (container._leaflet_id) return
+      map = L.map('mission-map').setView([latitude, longitude], 16)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+      }).addTo(map)
+      const icon = L.divIcon({
+        html: `<div style="background:#ef4444;width:24px;height:24px;border-radius:50%;border:4px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
+        className: '',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      })
+      L.marker([latitude, longitude], { icon })
+        .addTo(map)
+        .bindPopup(`<strong>📍 ${adresse || 'Zone signalée'}</strong>`)
+        .openPopup()
+    }
+    init()
+    return () => { if (map) map.remove() }
+  }, [latitude, longitude])
+
+  return (
+    <div
+      id="mission-map"
+      style={{ height: '300px', width: '100%', borderRadius: '12px', zIndex: 0 }}
+    />
+  )
 }
 
 export function MissionDetail({ id }: { id: string }) {
-  const mission = missionsData[id] || defaultMission
+  const [mission, setMission] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [isAccepted, setIsAccepted] = useState(false)
+  const [isAccepting, setIsAccepting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleAccept = () => {
-    setIsAccepted(true)
+  useEffect(() => {
+    fetch(`/api/missions/${id}`)
+      .then(r => {
+        if (!r.ok) {
+          throw new Error('Mission introuvable')
+        }
+        return r.json()
+      })
+      .then(data => {
+        setMission(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err.message || 'Erreur lors du chargement')
+        setLoading(false)
+      })
+  }, [id])
+
+  const handleAccept = async () => {
+    setIsAccepting(true)
+    setError(null)
+    try {
+      const token = localStorage.getItem('token')
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+      if (!token) {
+        setError('Connectez-vous pour accepter une mission')
+        setIsAccepting(false)
+        return
+      }
+
+      if (user.role !== 'COLLECTEUR') {
+        setError('Seuls les collecteurs peuvent accepter des missions')
+        setIsAccepting(false)
+        return
+      }
+
+      const res = await fetch(`/api/missions/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          statut: 'EN_COURS',
+          collecteurId: user.id,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Erreur lors de l\'acceptation')
+      setIsAccepted(true)
+      setMission((prev: any) => ({ ...prev, statut: 'EN_COURS' }))
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setIsAccepting(false)
+    }
   }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!mission || mission.error || error) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-2xl mb-2">😕</p>
+        <p className="text-on-surface-variant">{error || mission?.error || 'Mission introuvable'}</p>
+      </div>
+    )
+  }
+
+  const s = mission.signalement
+  const gravite = s?.gravite || 'LEGER'
+  const config = graviteConfig[gravite as keyof typeof graviteConfig]
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-      {/* Left Column: Image & Map */}
+
+      {/* Colonne gauche */}
       <div className="lg:col-span-7 space-y-6">
-        <div className="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-low aspect-video">
-          <Image 
-            src={mission.image}
-            alt={mission.title}
-            width={800}
-            height={450}
-            className="w-full h-full object-cover"
-            priority
-          />
-        </div>
-        {/* Map Placeholder */}
-        <div className="rounded-xl border border-outline-variant overflow-hidden h-[300px] relative">
-          <Image 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaXetLs8xK4Hi6VGspig4wo8o0-LHXyZpJSDURCKn79-NsSSVKcb6W47JtPMGxrqqRuoT7RhzlvVjrfAvvlgJNbtqwWZRtubhNsypy7b4uNqSQMLAIVXNvJOQm3xDJGNFcVYg8aS4WRwdbk6Lf_QqrHlB5D2PezTNr2eiGr-z0HvTQIOd-rWjeyUe_apJCa_FFezipai3p2XYxUHF2BX58-7i8oG6K1yHqUoSgiZ_nKfjc6nqkzaXprIBaoMSdtVw-zo9D91NbzjA"
-            alt="Carte de localisation"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-            <div className="bg-white/90 px-4 py-2 rounded-full shadow-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-              <span className="font-semibold text-on-surface">{mission.zone.split(',')[0]}, Parakou</span>
+
+        {/* Analyse IA */}
+        {s?.analyseIA && (
+          <div className={`p-4 rounded-xl border-2 ${config.color}`}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">🤖</span>
+              <span className="font-bold">Analyse IA — {config.label}</span>
             </div>
+            <p className="text-sm">{s.analyseIA}</p>
           </div>
-        </div>
+        )}
+
+        {/* Carte Leaflet réelle */}
+        {s?.latitude && s?.longitude ? (
+          <div className="rounded-xl border border-outline-variant overflow-hidden">
+            <div className="px-4 py-2 bg-surface-container-low border-b border-outline-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-sm">location_on</span>
+              <span className="text-sm font-semibold text-on-surface">
+                {s.adresse || 'Position GPS exacte'}
+              </span>
+              <span className="ml-auto text-xs text-on-surface-variant">
+                {s.latitude.toFixed(4)}, {s.longitude.toFixed(4)}
+              </span>
+            </div>
+            <MiniMap
+              latitude={s.latitude}
+              longitude={s.longitude}
+              adresse={s.adresse}
+            />
+          </div>
+        ) : (
+          <div className="h-[300px] bg-muted rounded-xl flex items-center justify-center">
+            <p className="text-on-surface-variant text-sm">Position GPS non disponible</p>
+          </div>
+        )}
       </div>
 
-      {/* Right Column: Mission Details */}
+      {/* Colonne droite */}
       <div className="lg:col-span-5 space-y-6">
         <div className="bg-surface border border-outline-variant rounded-xl p-6">
+
+          {/* Header */}
           <div className="flex justify-between items-start mb-3">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${
-              mission.priority === 'Priorité Haute' 
-                ? 'bg-error-container text-on-error-container' 
-                : mission.priority === 'En cours'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-primary-fixed text-on-primary-fixed-variant'
-            }`}>
-              {mission.priority}
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase ${config.color}`}>
+              {config.label}
             </span>
-            <div className="flex items-center text-on-surface-variant text-xs font-medium">
-              <span className="material-symbols-outlined text-base mr-1">event</span>
-              {mission.date}
-            </div>
-          </div>
-          <h1 className="text-2xl font-semibold text-primary mb-1">{mission.title}</h1>
-          <div className="flex items-center text-surface-tint font-semibold text-sm mb-6">
-            <span className="material-symbols-outlined mr-1 text-xl">location_city</span>
-            {mission.zone}
+            <span className="text-xs text-on-surface-variant">
+              {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+            </span>
           </div>
 
-          <div className="space-y-6 border-t border-outline-variant pt-6">
-            <div>
-              <h3 className="text-xs font-semibold text-on-surface-variant uppercase mb-1">Description de la mission</h3>
-              <p className="text-base text-on-surface leading-relaxed">
-                {mission.description}
-              </p>
+          <h1 className="text-2xl font-bold text-primary mb-1">{mission.titre}</h1>
+
+          {s?.adresse && (
+            <div className="flex items-center text-on-surface-variant text-sm mb-4 gap-1">
+              <span className="material-symbols-outlined text-base">location_city</span>
+              {s.adresse}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant">
-                <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>recycling</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant">Type</p>
-                  <p className="text-sm font-semibold text-on-surface">{mission.type}</p>
-                </div>
+          )}
+
+          <div className="space-y-4 border-t border-outline-variant pt-4">
+            {mission.description && (
+              <div>
+                <h3 className="text-xs font-semibold text-on-surface-variant uppercase mb-1">
+                  Description
+                </h3>
+                <p className="text-sm text-on-surface leading-relaxed">
+                  {mission.description}
+                </p>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant">
-                <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>local_shipping</span>
-                <div>
-                  <p className="text-xs text-on-surface-variant">Besoin</p>
-                  <p className="text-sm font-semibold text-on-surface">{mission.need}</p>
-                </div>
+            )}
+
+            {/* Points */}
+            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <span className="text-2xl">⭐</span>
+              <div>
+                <p className="text-xs text-amber-700">Récompense</p>
+                <p className="text-lg font-bold text-amber-800">{mission.points} points</p>
+              </div>
+              <div className="ml-auto text-xs text-amber-600 font-medium">
+                ≈ Mobile Money
+              </div>
+            </div>
+
+            {/* Statut */}
+            <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <span className="material-symbols-outlined text-primary">info</span>
+              <div>
+                <p className="text-xs text-on-surface-variant">Statut</p>
+                <p className="text-sm font-semibold text-on-surface">
+                  {mission.statut === 'DISPONIBLE' ? '✅ Disponible' :
+                   mission.statut === 'EN_COURS' ? '🔄 En cours' : '✔️ Terminée'}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3">
-            {isAccepted ? (
+          {/* Actions */}
+          <div className="mt-6 flex flex-col gap-3">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {isAccepted || mission.statut === 'EN_COURS' ? (
               <div className="w-full bg-primary-fixed text-primary font-semibold text-lg py-4 rounded-xl flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined">check_circle</span>
-                Mission acceptée
+                Mission acceptée !
+              </div>
+            ) : mission.statut === 'TERMINEE' ? (
+              <div className="w-full bg-green-100 text-green-800 font-semibold text-lg py-4 rounded-xl flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined">task_alt</span>
+                Mission terminée
               </div>
             ) : (
-              <button 
+              <button
                 onClick={handleAccept}
-                className="w-full bg-secondary-container text-on-secondary-container font-semibold text-lg py-4 rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                disabled={isAccepting}
+                className="w-full bg-secondary-container text-on-secondary-container font-semibold text-lg py-4 rounded-xl transition-all hover:shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined">task_alt</span>
-                Accepter la mission
+                {isAccepting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                    Acceptation...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">task_alt</span>
+                    Accepter la mission
+                  </>
+                )}
               </button>
             )}
-            <button className="w-full bg-transparent border-2 border-primary text-primary font-semibold text-lg py-4 rounded-xl active:scale-95 transition-transform hover:bg-primary-fixed/10">
-              Contacter le signalant
-            </button>
           </div>
         </div>
 
-        {/* Mission Statistics Card */}
-        <div className="bg-primary-container p-6 rounded-xl text-white">
+        {/* Impact */}
+        <div className="bg-primary-container p-6 rounded-xl">
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-3 rounded-full">
-              <span className="material-symbols-outlined text-2xl">eco</span>
+              <span className="material-symbols-outlined text-2xl text-white">eco</span>
             </div>
             <div>
-              <h4 className="text-xl font-semibold">Impact Environnemental</h4>
-              <p className="text-base opacity-90">{mission.impact}</p>
+              <h4 className="text-lg font-bold text-white">Impact Environnemental</h4>
+              <p className="text-white/90 text-sm">
+                {gravite === 'CRITIQUE'
+                  ? 'Réduction estimée de 300kg de CO₂ équivalent'
+                  : gravite === 'MODERE'
+                  ? 'Réduction estimée de 180kg de CO₂ équivalent'
+                  : 'Réduction estimée de 80kg de CO₂ équivalent'}
+              </p>
             </div>
           </div>
         </div>
