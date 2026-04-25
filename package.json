@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate --skip-engine-check && next build",
+    "build": "pnpm prisma generate --skip-engine-check && pnpm next build",
     "start": "next start",
     "lint": "eslint .",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
     "db:cleanup": "node prisma/cleanup.js",
-    "postinstall": "prisma generate --skip-engine-check || true"
+    "postinstall": "prisma generate --skip-engine-check 2>/dev/null || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

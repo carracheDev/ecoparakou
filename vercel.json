@@ -1,3 +1,4 @@
 {
-  "buildCommand": "prisma generate --skip-engine-check && next build"
+  "buildCommand": "pnpm prisma generate --skip-engine-check && pnpm next build",
+  "installCommand": "pnpm install --frozen-lockfile"
 }
